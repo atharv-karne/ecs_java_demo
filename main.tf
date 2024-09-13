@@ -5,21 +5,21 @@ provider "aws" {
 }
 
 # Create VPC
-resource "aws_vpc" "ecs_vpc_main" {
-  cidr_block = "10.0.0.0/16"
-}
+# resource "aws_vpc" "ecs_vpc_main" {
+#   cidr_block = "10.0.0.0/16"
+# }
 
 # Create Subnet
-resource "aws_subnet" "main" {
-  vpc_id                  = aws_vpc.ecs_vpc_main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "ap-south-1a"
-  map_public_ip_on_launch = true
-}
+# resource "aws_subnet" "main" {
+#   vpc_id                  = aws_vpc.ecs_vpc_main.id
+#   cidr_block              = "10.0.1.0/24"
+#   availability_zone       = "ap-south-1a"
+#   map_public_ip_on_launch = true
+# }
 
 # Create Security Group
 resource "aws_security_group" "allow_all" {
-  vpc_id = aws_vpc.ecs_vpc_main.id
+  vpc_id = "vpc-0f2fe70ca733aa854"
 
   egress {
     from_port   = 0
@@ -37,33 +37,33 @@ resource "aws_security_group" "allow_all" {
 }
 
 # Create Internet Gateway
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.ecs_vpc_main.id
+# resource "aws_internet_gateway" "igw" {
+#   vpc_id = aws_vpc.ecs_vpc_main.id
 
-  tags = {
-    Name = "ecs-igw-1"
-  }
-}
+#   tags = {
+#     Name = "ecs-igw-1"
+#   }
+# }
 
 # Create Route Table
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.ecs_vpc_main.id
+# resource "aws_route_table" "public" {
+#   vpc_id = aws_vpc.ecs_vpc_main.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
+#   route {
+#     cidr_block = "0.0.0.0/0"
+#     gateway_id = aws_internet_gateway.igw.id
+#   }
 
-  tags = {
-    Name = "public-route-table-changed"
-  }
-}
+#   tags = {
+#     Name = "public-route-table-changed"
+#   }
+# }
 
 # Associate Route Table with Subnet
-resource "aws_route_table_association" "public_subnet" {
-  subnet_id      = aws_subnet.main.id
-  route_table_id = aws_route_table.public.id
-}
+# resource "aws_route_table_association" "public_subnet" {
+#   subnet_id      = aws_subnet.main.id
+#   route_table_id = aws_route_table.public.id
+# }
 
 # Create IAM Role for ECS Instances
 resource "aws_iam_role" "ecs_instance_role" {
@@ -157,13 +157,14 @@ resource "aws_launch_configuration" "lc" {
 
 
 
-# Create Auto Scaling Group
+
+# Create Auto Scaling Group in default vpc
+
 resource "aws_autoscaling_group" "asg" {
   launch_configuration = aws_launch_configuration.lc.id
   min_size             = 1
   max_size             = 2
-  vpc_zone_identifier  = [aws_subnet.main.id]
-
+  vpc_zone_identifier = ["subnet-06e2a9084baca9d48", "subnet-04a80ca11363a735d"]
 
 }
 
@@ -184,7 +185,7 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
 resource "aws_ecs_task_definition" "app_task" {
   family                   = "my-java-app"
   requires_compatibilities = ["EC2"]
-  # cpu =256
+  # cpu =256,
   # memory=512
   network_mode             = "bridge"
   task_role_arn            = aws_iam_role.ecs_task_role.arn
