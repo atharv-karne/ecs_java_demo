@@ -5,13 +5,13 @@ provider "aws" {
 }
 
 # Create VPC
-resource "aws_vpc" "ecs_vpc" {
+resource "aws_vpc" "ecs_vpc_main" {
   cidr_block = "10.0.0.0/16"
 }
 
 # Create Subnet
 resource "aws_subnet" "main" {
-  vpc_id                  = aws_vpc.ecs_vpc.id
+  vpc_id                  = aws_vpc.ecs_vpc_main.id
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "ap-south-1a"
   map_public_ip_on_launch = true
@@ -19,7 +19,7 @@ resource "aws_subnet" "main" {
 
 # Create Security Group
 resource "aws_security_group" "allow_all" {
-  vpc_id = aws_vpc.ecs_vpc.id
+  vpc_id = aws_vpc.ecs_vpc_main.id
 
   egress {
     from_port   = 0
@@ -38,16 +38,16 @@ resource "aws_security_group" "allow_all" {
 
 # Create Internet Gateway
 resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.ecs_vpc.id
+  vpc_id = aws_vpc.ecs_vpc_main.id
 
   tags = {
-    Name = "ecs-igw"
+    Name = "ecs-igw-1"
   }
 }
 
 # Create Route Table
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.ecs_vpc.id
+  vpc_id = aws_vpc.ecs_vpc_main.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -55,7 +55,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "public-route-table"
+    Name = "public-route-table-changed"
   }
 }
 
@@ -67,7 +67,7 @@ resource "aws_route_table_association" "public_subnet" {
 
 # Create IAM Role for ECS Instances
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "customecsInstanceRole"
+  name = "customecsInstanceRoleChanged"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -85,14 +85,14 @@ resource "aws_iam_role" "ecs_instance_role" {
 
 # Attach Policies to ECS Instance Role
 resource "aws_iam_policy_attachment" "ecs_instance_role_policy" {
-  name       = "ecs_instance_role_policy"
+  name       = "ecs_instance_role_policy_Changed"
   roles      = [aws_iam_role.ecs_instance_role.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 # Create IAM Role for ECS Tasks
 resource "aws_iam_role" "ecs_task_role" {
-  name = "ecsTaskRole"
+  name = "ecsTaskRoleChanged"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -110,14 +110,14 @@ resource "aws_iam_role" "ecs_task_role" {
 
 # Attach Policies to ECS Task Role
 resource "aws_iam_policy_attachment" "ecs_task_role_policy" {
-  name       = "ecs_task_role_policy"
+  name       = "ecs_task_role_policy_Changed"
   roles      = [aws_iam_role.ecs_task_role.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 # Create IAM Instance Profile
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
-  name = "ecsInstanceProfile2"
+  name = "ecsInstanceProfileChanged"
   role = aws_iam_role.ecs_instance_role.name
 }
 
@@ -162,14 +162,14 @@ resource "aws_autoscaling_group" "asg" {
 
 
 # Create ECS Cluster
-resource "aws_ecs_cluster" "main" {
+resource "aws_ecs_cluster" "main_cluster" {
   name = "ecs-cluster"
 }
 
 
 #Log group
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name = "/ecs/my-java-app"
+  name = "/ecs/my-java-app-changed"
 }
 
 
@@ -207,7 +207,7 @@ resource "aws_ecs_task_definition" "app_task" {
 # Create ECS Service
 resource "aws_ecs_service" "app_service" {
   name            = "java-app-service"
-  cluster         = aws_ecs_cluster.main.id
+  cluster         = aws_ecs_cluster.main_cluster.id
   task_definition = aws_ecs_task_definition.app_task.arn
   desired_count   = 1
   launch_type     = "EC2"
