@@ -41,7 +41,6 @@ pipeline {
             }
         }
 
-        // Uncomment and adjust as needed for Terraform
         stage('Terraform apply') {
             steps {
                 script {
