@@ -138,16 +138,23 @@ resource "aws_launch_configuration" "lc" {
               sudo yum install -y ecs-init
               
               # Configure the ECS agent
-              sudo echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" > /etc/ecs/ecs.config
+              echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee /etc/ecs/ecs.config
               
-              # Start the ECS agent
+              # Start and enable the ECS agent
+              sudo systemctl stop ecs
               sudo systemctl start ecs
               sudo systemctl enable ecs
+
+              # Install Maven
+              sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
+              sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
+              sudo yum install -y apache-maven
               EOF
-    root_block_device {
+  root_block_device {
     volume_size = 24
   }
 }
+
 
 
 # Create Auto Scaling Group
