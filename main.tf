@@ -138,7 +138,7 @@ resource "aws_launch_configuration" "lc" {
               sudo yum install -y ecs-init
               
               # Configure the ECS agent
-              sudo echo "ECS_CLUSTER=${aws_ecs_cluster.main.name}" > /etc/ecs/ecs.config
+              sudo echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" > /etc/ecs/ecs.config
               
               # Start the ECS agent
               sudo systemctl start ecs
