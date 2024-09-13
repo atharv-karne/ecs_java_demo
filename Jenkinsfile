@@ -42,15 +42,15 @@ pipeline {
         }
 
         // Uncomment and adjust as needed for Terraform
-        // stage('Terraform Plan') {
-        //     steps {
-        //         script {
-        //             withCredentials([aws(credentialsId: 'AWS-Cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-        //                 sh 'terraform plan'
-        //                 sh 'terraform apply -auto-approve'
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Terraform apply') {
+            steps {
+                script {
+                    withCredentials([aws(credentialsId: 'AWS-Cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh 'terraform plan'
+                        sh 'terraform apply -auto-approve'
+                    }
+                }
+            }
+        }
     }
 }
