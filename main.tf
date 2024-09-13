@@ -169,7 +169,7 @@ resource "aws_ecs_cluster" "main" {
 
 #Log group
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name = "/ecs/my-node-app"
+  name = "/ecs/my-java-app"
 }
 
 
