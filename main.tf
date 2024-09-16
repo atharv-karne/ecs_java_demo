@@ -161,7 +161,7 @@ resource "aws_ecs_task_definition" "app_task" {
      logConfiguration = {
       logDriver = "awslogs"
       options = {
-        "awslogs-group"         = "/ecs/my-java-app"
+        "awslogs-group"         = "/ecs/my-java-app-changed"
         "awslogs-region"        = "ap-south-1"
         "awslogs-stream-prefix" = "ecs"
       }
