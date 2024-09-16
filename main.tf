@@ -137,7 +137,6 @@ resource "aws_ecs_cluster" "main_cluster" {
 resource "aws_cloudwatch_log_group" "ecs_logs" {
   name = "/ecs/my-java-app-changed"
 }
-
 # Create Application Load Balancer
 resource "aws_lb" "app_alb" {
   name               = "app-alb"
@@ -153,7 +152,7 @@ resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.app_alb.arn
   port              = 80
   protocol          = "HTTP"
-
+  
   default_action {
     type             = "fixed-response"
     fixed_response {
@@ -180,7 +179,7 @@ resource "aws_lb_target_group" "app_tg" {
   }
 }
 
-# Attach Target Group to ALB Listener
+# Create Listener Rule to forward traffic to Target Group
 resource "aws_lb_listener_rule" "app_listener_rule" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 100
@@ -191,11 +190,13 @@ resource "aws_lb_listener_rule" "app_listener_rule" {
   }
 
   condition {
-    host_header {
-    values = ["*"]
+    # field  = "path-pattern"
+    path_pattern {
+      values = ["/*"]
     }
   }
 }
+
 
 # Create ECS Task Definition
 resource "aws_ecs_task_definition" "app_task" {
