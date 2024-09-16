@@ -4,19 +4,6 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# Create VPC
-# resource "aws_vpc" "ecs_vpc_main" {
-#   cidr_block = "10.0.0.0/16"
-# }
-
-# Create Subnet
-# resource "aws_subnet" "main" {
-#   vpc_id                  = aws_vpc.ecs_vpc_main.id
-#   cidr_block              = "10.0.1.0/24"
-#   availability_zone       = "ap-south-1a"
-#   map_public_ip_on_launch = true
-# }
-
 # Create Security Group
 resource "aws_security_group" "allow_all" {
   vpc_id = "vpc-0f2fe70ca733aa854"
@@ -35,35 +22,6 @@ resource "aws_security_group" "allow_all" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-# Create Internet Gateway
-# resource "aws_internet_gateway" "igw" {
-#   vpc_id = aws_vpc.ecs_vpc_main.id
-
-#   tags = {
-#     Name = "ecs-igw-1"
-#   }
-# }
-
-# Create Route Table
-# resource "aws_route_table" "public" {
-#   vpc_id = aws_vpc.ecs_vpc_main.id
-
-#   route {
-#     cidr_block = "0.0.0.0/0"
-#     gateway_id = aws_internet_gateway.igw.id
-#   }
-
-#   tags = {
-#     Name = "public-route-table-changed"
-#   }
-# }
-
-# Associate Route Table with Subnet
-# resource "aws_route_table_association" "public_subnet" {
-#   subnet_id      = aws_subnet.main.id
-#   route_table_id = aws_route_table.public.id
-# }
 
 # Create IAM Role for ECS Instances
 resource "aws_iam_role" "ecs_instance_role" {
