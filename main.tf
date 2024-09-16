@@ -98,7 +98,6 @@ resource "aws_launch_configuration" "lc" {
               
               # Start and enable the ECS agent
               sudo systemctl enable ecs
-              sudo systemctl stop ecs
               sudo systemctl start ecs
 
               # Install Maven
