@@ -97,9 +97,9 @@ resource "aws_launch_configuration" "lc" {
               echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee /etc/ecs/ecs.config
               
               # Start and enable the ECS agent
+              sudo systemctl enable ecs
               sudo systemctl stop ecs
               sudo systemctl start ecs
-              sudo systemctl enable ecs
 
               # Install Maven
               sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
