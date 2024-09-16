@@ -149,7 +149,7 @@ resource "aws_ecs_task_definition" "app_task" {
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   container_definitions = jsonencode([{
     name      = "java-app"
-    image     = "https://730335267178.dkr.ecr.ap-south-1.amazonaws.com/my-spring-boot-app:latest"
+    image     = "730335267178.dkr.ecr.ap-south-1.amazonaws.com/my-spring-boot-app:latest"
     memory    = 512
     cpu       = 256
     essential = true
