@@ -111,32 +111,22 @@ resource "aws_launch_configuration" "lc" {
   }
 }
 
-# Create Auto Scaling Group
-resource "aws_autoscaling_group" "asg" {
-  launch_configuration = aws_launch_configuration.lc.id
-  min_size             = 1
-  max_size             = 2
-  vpc_zone_identifier  = ["subnet-06e2a9084baca9d48", "subnet-04a80ca11363a735d"]
+# Create Target Group
+resource "aws_lb_target_group" "app_tg" {
+  name     = "app-tg"
+  port     = 8081
+  protocol = "HTTP"
+  vpc_id   = "vpc-0f2fe70ca733aa854"
 
-  tag {
-    key                 = "Name"
-    value               = "ecs-instance"
-    propagate_at_launch = true
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold    = 3
+    unhealthy_threshold  = 3
   }
-  
-  # Register instances with the ALB
-  load_balancers = [aws_lb.app_alb.name]
 }
 
-# Create ECS Cluster
-resource "aws_ecs_cluster" "main_cluster" {
-  name = "ecs-cluster"
-}
-
-# Create CloudWatch Log Group
-resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name = "/ecs/my-java-app-changed"
-}
 # Create Application Load Balancer
 resource "aws_lb" "app_alb" {
   name               = "app-alb"
@@ -163,22 +153,6 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# Create Target Group
-resource "aws_lb_target_group" "app_tg" {
-  name     = "app-tg"
-  port     = 8081
-  protocol = "HTTP"
-  vpc_id   = "vpc-0f2fe70ca733aa854"
-
-  health_check {
-    path                = "/"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold    = 3
-    unhealthy_threshold  = 3
-  }
-}
-
 # Create Listener Rule to forward traffic to Target Group
 resource "aws_lb_listener_rule" "app_listener_rule" {
   listener_arn = aws_lb_listener.http.arn
@@ -197,6 +171,30 @@ resource "aws_lb_listener_rule" "app_listener_rule" {
   }
 }
 
+# Create Auto Scaling Group
+resource "aws_autoscaling_group" "asg" {
+  launch_configuration = aws_launch_configuration.lc.id
+  min_size             = 1
+  max_size             = 2
+  vpc_zone_identifier  = ["subnet-06e2a9084baca9d48", "subnet-04a80ca11363a735d"]
+
+  # Attach the Target Group
+  target_group_arns = [aws_lb_target_group.app_tg.arn]
+
+  # Health check type should be ELB
+  health_check_type          = "ELB"
+  health_check_grace_period = 300
+}
+
+# Create ECS Cluster
+resource "aws_ecs_cluster" "main_cluster" {
+  name = "ecs-cluster"
+}
+
+# Log Group
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name = "/ecs/my-java-app-changed"
+}
 
 # Create ECS Task Definition
 resource "aws_ecs_task_definition" "app_task" {
@@ -210,18 +208,19 @@ resource "aws_ecs_task_definition" "app_task" {
     memory    = 512
     cpu       = 256
     essential = true
-    portMappings = [ {
+    portMappings = [{
       containerPort = 8081
       hostPort      = 8081
     }]
-    logConfiguration = {
+
+     logConfiguration = {
       logDriver = "awslogs"
       options = {
         "awslogs-group"         = "/ecs/my-java-app-changed"
         "awslogs-region"        = "ap-south-1"
         "awslogs-stream-prefix" = "ecs"
       }
-    }
+     }
   }])
 }
 
@@ -232,22 +231,14 @@ resource "aws_ecs_service" "app_service" {
   task_definition = aws_ecs_task_definition.app_task.arn
   desired_count   = 1
   launch_type     = "EC2"
-
+  
+  # Ensure that the service uses the ALB for load balancing
   load_balancer {
     target_group_arn = aws_lb_target_group.app_tg.arn
     container_name   = "java-app"
     container_port   = 8081
   }
-
-  depends_on = [
-    aws_lb_listener_rule.app_listener_rule
-  ]
 }
-
-
-
-
-
 
 
 
