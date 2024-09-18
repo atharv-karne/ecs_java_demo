@@ -73,7 +73,7 @@ resource "aws_iam_policy_attachment" "ecs_task_role_policy" {
 
 # Create IAM Instance Profile
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
-  name = "ecsInstanceProfileChanged12"
+  name = "ecsInstanceProfileChanged13"
   role = aws_iam_role.ecs_instance_role.name
 }
 
