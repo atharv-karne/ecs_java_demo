@@ -79,36 +79,77 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 
 # Create Launch Configuration
 resource "aws_launch_configuration" "lc" {
-  image_id             = "ami-0dcf20045412efa41"
+  image_id             = "ami-0dcf20045412efa41"  # Ensure this is an ECS-optimized AMI
   instance_type        = "t2.medium"
   iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
   security_groups      = [aws_security_group.allow_all.id]
   user_data            = <<-EOF
               #!/bin/bash
+              echo "Starting user data script" >> /var/log/ecs-user-data.log
               
               # Update the system
               sudo yum update -y
-
+              
               # Install the ECS agent
-              sudo curl -o /etc/yum.repos.d/ecs.repo https://amazon-ecs-agent.s3.amazonaws.com/amazon-ecs-agent.repo
+              sudo amazon-linux-extras enable ecs
               sudo yum install -y ecs-init
               
               # Configure the ECS agent
-              echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee /etc/ecs/ecs.config
+              echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee -a /etc/ecs/ecs.config
               
-              # Start and enable the ECS agent
-              sudo systemctl enable ecs
-              sudo systemctl start ecs
+              sudo systemctl stop ecs
 
+              # Start the ECS service
+              echo "Starting ECS service..." >> /var/log/ecs-user-data.log
+              sudo systemctl start ecs
+              
+              # Wait for ECS service to be fully operational
+              echo "Waiting for ECS service to start..." >> /var/log/ecs-user-data.log
+              timeout=90
+              while [ $timeout -gt 0 ]; do
+                  if sudo systemctl is-active --quiet ecs; then
+                      echo "ECS service is active" >> /var/log/ecs-user-data.log
+                      break
+                  fi
+                  sleep 5
+                  let timeout-=5
+              done
+              
+              if [ $timeout -le 0 ]; then
+                  echo "Timed out waiting for ECS service to start" >> /var/log/ecs-user-data.log
+                  exit 1
+              fi
+              
+              # Verify ECS agent is connected to the cluster
+              echo "Verifying ECS agent connection to cluster..." >> /var/log/ecs-user-data.log
+              timeout=60
+              while [ $timeout -gt 0 ]; do
+                  if curl -s http://localhost:51678/v1/metadata | grep -q ${aws_ecs_cluster.main_cluster.name}; then
+                      echo "ECS agent is connected to the cluster" >> /var/log/ecs-user-data.log
+                      break
+                  fi
+                  sleep 5
+                  let timeout-=5
+              done
+              
+              if [ $timeout -le 0 ]; then
+                  echo "Timed out waiting for ECS agent to connect to cluster" >> /var/log/ecs-user-data.log
+                  exit 1
+              fi
+              
               # Install Maven
               sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
               sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
               sudo yum install -y apache-maven
+              
+              echo "User data script completed successfully" >> /var/log/ecs-user-data.log
               EOF
   root_block_device {
     volume_size = 24
   }
 }
+
+
 
 # Create Target Group
 resource "aws_lb_target_group" "app_tg" {
