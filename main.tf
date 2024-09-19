@@ -97,10 +97,9 @@ resource "aws_launch_configuration" "lc" {
               # Configure the ECS agent
               echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee -a /etc/ecs/ecs.config
               
-              sudo systemctl stop ecs
 
-              # Start the ECS service
-              echo "Starting ECS service..." >> /var/log/ecs-user-data.log
+              sudo systemctl stop ecs
+              sudo systemctl enable --now --no-block ecs.service
               sudo systemctl start ecs
               
               # Wait for ECS service to be fully operational
