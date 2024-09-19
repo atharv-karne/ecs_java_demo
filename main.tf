@@ -96,45 +96,25 @@ resource "aws_launch_configuration" "lc" {
               
               # Configure the ECS agent
               echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee -a /etc/ecs/ecs.config
+
+              $ sudo systemctl edit --full ecs
+              ...
+              ...
+              [Unit]
+              Description=Amazon Elastic Container Service - container agent
+              Documentation=https://aws.amazon.com/documentation/ecs/
+              Requires=docker.service
+              After=docker.service
+              After=cloud-final.service # REMOVE THIS LINE
+              ...
+              ...
+              $ sudo systemctl daemon-reload
               
 
               sudo systemctl stop ecs
               sudo systemctl enable --now --no-block ecs.service
               sudo systemctl start ecs
               
-              # Wait for ECS service to be fully operational
-              echo "Waiting for ECS service to start..." >> /var/log/ecs-user-data.log
-              timeout=90
-              while [ $timeout -gt 0 ]; do
-                  if sudo systemctl is-active --quiet ecs; then
-                      echo "ECS service is active" >> /var/log/ecs-user-data.log
-                      break
-                  fi
-                  sleep 5
-                  let timeout-=5
-              done
-              
-              if [ $timeout -le 0 ]; then
-                  echo "Timed out waiting for ECS service to start" >> /var/log/ecs-user-data.log
-                  exit 1
-              fi
-              
-              # Verify ECS agent is connected to the cluster
-              echo "Verifying ECS agent connection to cluster..." >> /var/log/ecs-user-data.log
-              timeout=60
-              while [ $timeout -gt 0 ]; do
-                  if curl -s http://localhost:51678/v1/metadata | grep -q ${aws_ecs_cluster.main_cluster.name}; then
-                      echo "ECS agent is connected to the cluster" >> /var/log/ecs-user-data.log
-                      break
-                  fi
-                  sleep 5
-                  let timeout-=5
-              done
-              
-              if [ $timeout -le 0 ]; then
-                  echo "Timed out waiting for ECS agent to connect to cluster" >> /var/log/ecs-user-data.log
-                  exit 1
-              fi
               
               # Install Maven
               sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
