@@ -252,17 +252,21 @@ resource "aws_ecs_task_definition" "app_task" {
       containerPort = 8081
       hostPort      = 8081
     }]
-
-     logConfiguration = {
+    entryPoint = ["/bin/sh", "-c"]
+    command    = [
+      "echo 'Starting application'; java -jar /app.jar"
+    ]
+    logConfiguration = {
       logDriver = "awslogs"
       options = {
         "awslogs-group"         = "/ecs/my-java-app-changed"
         "awslogs-region"        = "ap-south-1"
         "awslogs-stream-prefix" = "ecs"
       }
-     }
+    }
   }])
 }
+
 
 # Create ECS Service
 resource "aws_ecs_service" "app_service" {
