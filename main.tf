@@ -90,16 +90,19 @@ resource "aws_launch_configuration" "lc" {
         # Update the system
         sudo yum update -y
 
-        # Install the ECS agent
-        sudo amazon-linux-extras enable ecs
-        sudo yum install -y ecs-init
+        # # Install the ECS agent
+        # sudo amazon-linux-extras enable ecs
+        # sudo yum install -y ecs-init
 
         # Configure the ECS agent
         echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee /etc/ecs/ecs.config
 
         # Start ECS agent
+
         sudo systemctl enable --now --no-block ecs
+        sudo systemctl stop ecs
         sudo systemctl start ecs
+
 
         echo "User data script completed successfully" >> /var/log/ecs-user-data.log
 
