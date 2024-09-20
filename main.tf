@@ -222,7 +222,7 @@ resource "aws_ecs_task_definition" "app_task" {
     }]
     entryPoint = ["/bin/sh", "-c"]
     command    = [
-      "echo 'Starting application'; java -jar /app.jar"
+      "echo 'Starting application'; java -jar /app/demo.jar"
     ]
     logConfiguration = {
       logDriver = "awslogs"
