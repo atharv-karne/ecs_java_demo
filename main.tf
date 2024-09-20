@@ -79,7 +79,7 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 
 # Create Launch Configuration
 resource "aws_launch_configuration" "lc" {
-  image_id             = "ami-045162d33517975f5"  
+  image_id             = "ami-005954be5f53ece60"  
   instance_type        = "t2.micro"
   iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
   security_groups      = [aws_security_group.allow_all.id]
