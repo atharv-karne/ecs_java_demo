@@ -80,7 +80,7 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 # Create Launch Configuration
 resource "aws_launch_configuration" "lc" {
   image_id             = "ami-045162d33517975f5"  
-  instance_type        = "t2.medium"
+  instance_type        = "t2.micro"
   iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
   security_groups      = [aws_security_group.allow_all.id]
   user_data            = <<-EOF
@@ -102,6 +102,11 @@ resource "aws_launch_configuration" "lc" {
         sudo systemctl enable --now --no-block ecs
         sudo systemctl stop ecs
         sudo systemctl start ecs
+
+
+        sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
+        sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
+        sudo yum install -y apache-maven
 
 
         echo "User data script completed successfully" >> /var/log/ecs-user-data.log
