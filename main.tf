@@ -73,13 +73,13 @@ resource "aws_iam_policy_attachment" "ecs_task_role_policy" {
 
 # Create IAM Instance Profile
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
-  name = "ecsInstanceProfileChanged13"
+  name = "ecsInstanceProfileChanged14"
   role = aws_iam_role.ecs_instance_role.name
 }
 
 # Create Launch Configuration
 resource "aws_launch_configuration" "lc" {
-  image_id             = "ami-0dcf20045412efa41"  # Ensure this is an ECS-optimized AMI
+  image_id             = "ami-045162d33517975f5"  
   instance_type        = "t2.medium"
   iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
   security_groups      = [aws_security_group.allow_all.id]
