@@ -98,7 +98,8 @@ resource "aws_launch_configuration" "lc" {
         echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee /etc/ecs/ecs.config
 
         # Start ECS agent
-        sudo systemctl enable --now --no-block ecs.service
+        sudo systemctl enable --now --no-block ecs
+        sudo systemctl start ecs
 
         echo "User data script completed successfully" >> /var/log/ecs-user-data.log
 
