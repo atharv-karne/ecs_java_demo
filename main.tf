@@ -84,44 +84,24 @@ resource "aws_launch_configuration" "lc" {
   iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
   security_groups      = [aws_security_group.allow_all.id]
   user_data            = <<-EOF
-              #!/bin/bash
-              echo "Starting user data script" >> /var/log/ecs-user-data.log
-              
-              # Update the system
-              sudo yum update -y
-              
-              # Install the ECS agent
-              sudo amazon-linux-extras enable ecs
-              sudo yum install -y ecs-init
-              
-              # Configure the ECS agent
-              echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee -a /etc/ecs/ecs.config
+        #!/bin/bash
+        echo "Starting user data script" >> /var/log/ecs-user-data.log
 
-              $ sudo systemctl edit --full ecs
-              ...
-              ...
-              [Unit]
-              Description=Amazon Elastic Container Service - container agent
-              Documentation=https://aws.amazon.com/documentation/ecs/
-              Requires=docker.service
-              After=docker.service
-              After=cloud-final.service # REMOVE THIS LINE
-              ...
-              ...
-              $ sudo systemctl daemon-reload
-              
+        # Update the system
+        sudo yum update -y
 
-              sudo systemctl stop ecs
-              sudo systemctl enable --now --no-block ecs.service
-              sudo systemctl start ecs
-              
-              
-              # Install Maven
-              sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
-              sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
-              sudo yum install -y apache-maven
-              
-              echo "User data script completed successfully" >> /var/log/ecs-user-data.log
+        # Install the ECS agent
+        sudo amazon-linux-extras enable ecs
+        sudo yum install -y ecs-init
+
+        # Configure the ECS agent
+        echo "ECS_CLUSTER=${aws_ecs_cluster.main_cluster.name}" | sudo tee /etc/ecs/ecs.config
+
+        # Start ECS agent
+        sudo systemctl enable --now ecs.service
+
+        echo "User data script completed successfully" >> /var/log/ecs-user-data.log
+
               EOF
   root_block_device {
     volume_size = 24
